@@ -26,6 +26,17 @@ import (
 )
 
 func TestExportedMetrics(t *testing.T) {
+
+	want := []metrics.Exported{
+		{"mixer_config_adapter_info_configs_total", "HISTOGRAM", "The number of known adapters in the current config."},
+		{"mixer_config_attributes_total", "GAUGE", "The number of known attributes in the current config."},
+		{"mixer_config_handler_configs_total", "GAUGE", "The number of known handlers in the current config."},
+		{"mixer_config_instance_config_errors_total", "GAUGE", "The number of errors encountered during processing of the instance configuration."},
+		{"mixer_config_instance_configs_total", "GAUGE", "The number of known instances in the current config."},
+		{"mixer_config_rule_config_errors_total", "COUNTER", "The number of errors encountered during processing of the rule configuration."},
+		{"mixer_config_rule_configs_total", "COUNTER", "The number of known rules in the current config."},
+	}
+
 	registerViews()
 	r := metrics.NewOpenCensusRegistry()
 	if got := r.ExportedMetrics(); !reflect.DeepEqual(got, want) {
@@ -76,16 +87,6 @@ var (
 		"mixer/config/adapter_info_configs_total",
 		"The number of known adapters in the current config.",
 		stats.UnitDimensionless)
-
-	want = []metrics.Exported{
-		{"mixer_config_adapter_info_configs_total", "LastValue", "The number of known adapters in the current config."},
-		{"mixer_config_attributes_total", "LastValue", "The number of known attributes in the current config."},
-		{"mixer_config_handler_configs_total", "LastValue", "The number of known handlers in the current config."},
-		{"mixer_config_instance_config_errors_total", "LastValue", "The number of errors encountered during processing of the instance configuration."},
-		{"mixer_config_instance_configs_total", "LastValue", "The number of known instances in the current config."},
-		{"mixer_config_rule_config_errors_total", "LastValue", "The number of errors encountered during processing of the rule configuration."},
-		{"mixer_config_rule_configs_total", "LastValue", "The number of known rules in the current config."},
-	}
 )
 
 func newView(measure stats.Measure, keys []tag.Key, aggregation *view.Aggregation) *view.View {
@@ -105,9 +106,9 @@ func registerViews() {
 		newView(HandlersTotal, []tag.Key{}, view.LastValue()),
 		newView(InstancesTotal, []tag.Key{}, view.LastValue()),
 		newView(InstanceErrs, []tag.Key{}, view.LastValue()),
-		newView(RulesTotal, []tag.Key{}, view.LastValue()),
-		newView(RuleErrs, []tag.Key{}, view.LastValue()),
-		newView(AdapterInfosTotal, []tag.Key{}, view.LastValue()),
+		newView(RulesTotal, []tag.Key{}, view.Count()),
+		newView(RuleErrs, []tag.Key{}, view.Sum()),
+		newView(AdapterInfosTotal, []tag.Key{}, view.Distribution()),
 	}
 
 	view.Register(views...)

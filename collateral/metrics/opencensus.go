@@ -30,6 +30,14 @@ type OpenCensusRegistry struct {
 	metrics map[string]Exported
 }
 
+var opencensusToProm = map[view.AggType]string{
+	view.AggTypeNone:         "UNTYPED",
+	view.AggTypeCount:        "COUNTER",
+	view.AggTypeSum:          "COUNTER",
+	view.AggTypeLastValue:    "GAUGE",
+	view.AggTypeDistribution: "HISTOGRAM",
+}
+
 // NewOpenCensusRegistry collects a list of exported metrics. As part of the setup,
 // it configures the OpenCensus mechanisms for rapid reporting (1ms) and sleeps for
 // double that period (2ms) to ensure an export happens before generation.
@@ -53,7 +61,7 @@ func (r *OpenCensusRegistry) ExportView(d *view.Data) {
 	name := promName(d.View.Name)
 	r.Lock()
 	if _, ok := r.metrics[name]; !ok {
-		r.metrics[name] = Exported{name, d.View.Aggregation.Type.String(), d.View.Description}
+		r.metrics[name] = Exported{name, opencensusToProm[d.View.Aggregation.Type], d.View.Description}
 	}
 	r.Unlock()
 }

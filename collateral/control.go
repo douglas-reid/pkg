@@ -744,7 +744,25 @@ func (g *generator) genMetrics() {
 <tbody>`)
 
 	r := metrics.NewOpenCensusRegistry()
+
+	// avoid duplication
+	m := map[string]metrics.Exported{}
+	sortedNames := []string{}
 	for _, metric := range r.ExportedMetrics() {
+		m[metric.Name] = metric
+		sortedNames = append(sortedNames, metric.Name)
+	}
+	for _, metric := range metrics.PrometheusExportedMetrics() {
+		if _, found := m[metric.Name]; !found {
+			m[metric.Name] = metric
+			sortedNames = append(sortedNames, metric.Name)
+		}
+	}
+
+	sort.Strings(sortedNames)
+
+	for _, name := range sortedNames {
+		metric := m[name]
 		g.emit("<tr><td><code>", metric.Name, "</code></td><td><code>", metric.Type, "</code></td><td>", metric.Description, "</td></tr>")
 	}
 
